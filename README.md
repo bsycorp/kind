@@ -9,12 +9,14 @@ We run workloads in Kubernetes, and run our CI on Kubernetes too, but in our CI 
 Not from what we can see, there are examples of other solutions to this problem, it seems mostly from the Kubernetes devs themselves, as a way to automate development of integrations or Kubernetes itself. We wanted something that was both ephemeral and really fast, none of the available options gave us all of that.
 
 Other discussion:
-https://github.com/kubernetes/minikube/tree/master/deploy/docker
-https://github.com/kubernetes-sigs/kubeadm-dind-cluster/
-https://github.com/kubernetes/test-infra/tree/master/dind
-http://callistaenterprise.se/blogg/teknik/2017/12/20/kubernetes-on-docker-in-docker/
+- https://github.com/kubernetes/minikube/tree/master/deploy/docker
+- https://github.com/kubernetes-sigs/kubeadm-dind-cluster/
+- https://github.com/kubernetes/test-infra/tree/master/dind
+- http://callistaenterprise.se/blogg/teknik/2017/12/20/kubernetes-on-docker-in-docker/
 
 ## How does it work?
+
+tl;dr; Building on docker-in-docker it uses `minikube` and `kubeadm` to bootstrap and pre-configure a cluster at build time that works at runtime.
 
 The simplest way to get a Kubernetes cluster running in CI is to use `minikube` and start with `--vm-driver none`, this uses `kubeadm` to bootstrap a set of local processes to start Kubernetes. This doesn't work out of the box in `dind` as `kubeadm` assumes it is running in a SystemD environment, which alpine is not. It also downloads binaries and bootstraps the cluster everytime it is run which depending on your network and resources takes around 4 minutes.
 
@@ -28,7 +30,7 @@ A further optimisation is to have the build phase `docker pull` any dependent im
 
 ## How to use?
 
-`kink` is designed to be run as a CI "service", where by it is accessible over a known interface, normally `localhost`. Much like `docker:dind` on which it is based, it must be run as a `privileged` container. 
+`kink` is a docker image that only runs as `--privileged`, that is designed to be run as a CI service, where by it is accessible over a known interface, normally `localhost`. Much like `docker:dind` on which it is based.
 
 Running it as a service means the container running your tests needs to know when `kink` is ready, and how to get the `kubectl` config to make cli calls. This is achieved via the config endpoint. By default this is exposed over port `10080` and is just a simple http server hosting files. 
 
@@ -54,23 +56,12 @@ integration-test:
 
 https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#define-image-and-services-from-gitlab-ci-yml
 
-
-## How to build?
-
-Run `./build.sh <image name>` to build the image. Add your custom images to `/images.sh` to have them be available at runtime. These environment variables are available to configure the build:
-
-DOCKER_IMAGE: defaults to `stable-dind`
-MINIKUBE_VERSION: defaults to `v0.28.0`
-KUBERNETES_VERSION: defaults to `v1.10.5`
-STATIC_IP: defaults to `172.99.99.1`
-
-## Config Server
-
 To use generated kube config:
 
 ```
 wget http://localhost:10080/config
 cp config ~/.kube/config
+kubectl get nodes
 ```
 
 To create/add custom local kube config with creds:
@@ -90,4 +81,18 @@ kubectl config set-credentials kink-admin \
 
 kubectl config set-context kink --cluster=kink-cluster --user=kink-admin
 kubectl config use-context kink
+kubectl get nodes
 ```
+
+## How to build for myself?
+
+Pre-built images are available on dockerhub (https://hub.docker.com/r/bsycorp/kink/), but if you want to bake in your own images to make it as fast as possible, you will want to built it yourself.
+
+Run `./build.sh <image name>` to build the image. Add your custom images to `/images.sh` to have them be available at runtime. These environment variables are available to configure the build:
+
+- DOCKER_IMAGE: defaults to `stable-dind`
+- MINIKUBE_VERSION: defaults to `v0.28.0`
+- KUBERNETES_VERSION: defaults to `v1.10.5`
+- STATIC_IP: defaults to `172.99.99.1`
+
+We use git submodules to pull in this project and then add images and CI configuration around it, but there are other ways to do it.

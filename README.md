@@ -41,6 +41,22 @@ There are few important events that `kind` exposes:
 
 As you want your docker images you want to test to be built into `kind` docker host, the general process is to wait for `.../docker-ready` before doing `docker build..`, then wait for `.../kubernetes-ready` before deploy, then test.
 
+## Can I use it on my Cloud CI/CD provider?
+
+Not sure as we are running this in an on-premise Gitlab install, but interested to hear feedback from people where it does or doesn't work. As above it is designed to be like `docker:dind` but with Kubernetes, so in theory anywhere `docker:dind` runs this should run, and like `docker:dind` it requires the container be launched as `--privileged` which generally cloud providers don't like.
+
+Confirmed working:
+- Gitlab On-premise (CE or EE*)
+
+Should work:
+- Gitlab.com with BYO Docker or Kubenetes runners
+- Codeship Pro
+- CircleCI `machine` executors
+
+Unlikely to work:
+- Bitbucket Pipelines, has a magic `docker: true` flag so will likely not work
+- Travis CI, has a magic `services: docker` and `sudo: required` check so might not work
+
 An example Gitlab CI YAML would be :
 
 ```

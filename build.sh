@@ -38,10 +38,11 @@ docker cp resources/setup.sh $CONTAINER_ID:/setup.sh
 docker cp resources/start.sh $CONTAINER_ID:/start.sh
 docker cp resources/kubelet.sh $CONTAINER_ID:/kubelet.sh
 docker cp resources/supervisord.conf $CONTAINER_ID:/etc/supervisord.conf
-docker cp images.sh $CONTAINER_ID:/images.sh
+docker cp before-cluster.sh $CONTAINER_ID:/before-cluster.sh
+docker cp after-cluster.sh $CONTAINER_ID:/after-cluster.sh
 
 echo "Starting setup"
-docker exec $CONTAINER_ID /setup.sh $KUBERNETES_VERSION $MINIKUBE_VERSION $STATIC_IP $REGISTRY_TOKEN
+docker exec $CONTAINER_ID /setup.sh $KUBERNETES_VERSION $MINIKUBE_VERSION $STATIC_IP
 echo "Commiting new container"
 docker commit \
 	-c 'CMD ["/usr/bin/supervisord", "--nodaemon", "-c", "/etc/supervisord.conf"]' \

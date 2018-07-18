@@ -3,7 +3,6 @@ set -ex
 KUBERNETES_VERSION="$1"
 MINIKUBE_VERSION="$2"
 STATIC_IP="$3"
-REGISTRY_TOKEN="$4" # an optional value that can be made available as an environment variable to custom images.sh scripts for private registry access
 
 mkdir -p /var/kube-config
 echo $KUBERNETES_VERSION > /var/kube-config/kubernetes-version
@@ -30,6 +29,9 @@ curl -Lo /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/sgerra
 curl -Lo glibc-2.26-r0.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.26-r0/glibc-2.26-r0.apk
 apk add glibc-2.26-r0.apk
 rm -f glibc-2.26-r0.apk
+
+# fire before cluster hook
+source /before-cluster.sh
     
 # get kube binaries
 curl -Lo /usr/local/bin/minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && chmod +x /usr/local/bin/minikube
@@ -83,9 +85,8 @@ cp /root/.minikube/ca.crt /var/kube-config/ca.crt
 cp /root/.kube/config /var/kube-config/config
 chmod 644 /var/kube-config/*
 
-# prime docker cache with useful images, already have kube cluster stuff..
-echo "Priming docker cache with non-cluster images.."
-/images.sh
+# fire after cluster hook, can be used for image pull / addon enabling whatevs
+source /after-cluster.sh
 
 # wait for pod start
 START_TIME=$(date +%s)
@@ -129,3 +130,4 @@ rm -f /images.sh
 rm -f /usr/local/bin/minikube
 rm -f /usr/bin/kubeadm
 rm -rf ~/.minikube/
+rm -rf /*-cluster.sh

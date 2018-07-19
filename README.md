@@ -112,3 +112,27 @@ Run `./build.sh <image name>` to build the image. Add your custom images to `/im
 - STATIC_IP: defaults to `172.99.99.1`
 
 We use git submodules to pull in this project and then add images and CI configuration around it, but there are other ways to do it.
+
+## Build hooks
+
+There are two hooks available during the `kind` build, `before-cluster.sh` and `after-cluster.sh`. As their names suggest they are run directly before and after the kube cluster is created.
+
+Examples of this scripts exist in the repo already, but they can be overwritten / extended to add extra functionality.
+
+## How to pull images from a private registry?
+
+Depending how you authenticate to your registry this can be a bit tricky. As the `./build.sh` script actually starts a docker container and configures it, because of this the container running your build hook scripts won't have access to all the environment variables / binaries it normally would. To work around this we just write out the build hook script in our outer CI process dynamically during the build. 
+
+Your `kind` CI  build script might look like:
+
+```
+echo "$(aws ecr get-login --no-include-email --region some-region)" >> ./kind/before-cluster.sh
+docker pull 12345.ecr.amazonaws.com/smth:latest
+
+or
+
+echo "docker login -u username -p $REGISTRY_TOKEN_FROM_CI registry.smth.com" >> ./kind/before-cluster.sh
+docker pull registry.smth.com/app:latest
+```
+
+Then the `before-cluster.sh` hook will fire during the build and have all the details it needs to login and pull the private images.

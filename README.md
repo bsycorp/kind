@@ -6,13 +6,16 @@ We run workloads in Kubernetes, and run our CI on Kubernetes too, but in our CI 
 
 ## Isn't this solved already?
 
-Not from what we can see, there are examples of other solutions to this problem, it seems mostly from the Kubernetes devs themselves, as a way to automate development of integrations or Kubernetes itself. We wanted something that was both ephemeral and really fast, none of the available options gave us all of that.
+Sort of, but not optimised for a fast-starting single-node cluster. There are examples of other solutions to this problem, it seems mostly from the Kubernetes devs themselves, as a way to automate development of integrations or Kubernetes itself. We wanted something that was both ephemeral, reliable and really fast, none of the available options gave us all of that.
 
-Other discussion:
-- https://github.com/kubernetes/minikube/tree/master/deploy/docker
-- https://github.com/kubernetes-sigs/kubeadm-dind-cluster/
-- https://github.com/kubernetes/test-infra/tree/master/dind
-- http://callistaenterprise.se/blogg/teknik/2017/12/20/kubernetes-on-docker-in-docker/
+Other projects:
+1. https://github.com/kubernetes/minikube/tree/master/deploy/docker (Deprecated)
+2. https://github.com/kubernetes/test-infra/tree/master/dind (Replaces no.1)
+3. https://github.com/kubernetes-sigs/kubeadm-dind-cluster/ (more info: http://callistaenterprise.se/blogg/teknik/2017/12/20/kubernetes-on-docker-in-docker/)
+
+Excluding no.1 which uses `localkube` (which is deprecated), both no.2 and no.3 create a proper cluster, with separate instances for a master and node(s). Because they start a multi node cluster they need to use `dind` inside `dind`, creating docker in docker in docker. As you can imagine adding another levels of abstraction can change how things behave, so disk access can be even slower than normal as we are two levels deep. Depending on the setup this can be caused because a fast storage driver like overlay2 can't be used _on_ overlay2, so docker will fall back to slower / more compatiable choices like AUFS (depends on Docker version). It can also have an impact on reliability, if you are hitting docker+kernel edge cases that trigger strange behaviour, it is likely you will see more strange behaviour with docker in docker in docker.
+
+As an applcation sitting on top of kubernetes, we don't really need a full multi-node cluster to run our CI tests, we just need a single node+master. Since we only need a single instance, we don't need the complexity of docker-in-docker-in-docker, docker-in-docker is just fine (as we only have 1 instance vs 2+). This should make disk access faster (only 1 `dind`, so can use `overlay2`) which should help make our kube deploy and tests fast and it should be easier and more reliable to prime/bootstrap everything during build time and just start it up at runtime.
 
 ## How does it work?
 

@@ -1,0 +1,10 @@
+sudo: required
+services: docker
+language: minimal
+
+env:
+  - KUBERNETES_VERSION: v1.9.7
+  
+script:
+  # building k8s may cause Travis to time out w/o output
+  - ./build.sh bsycorp/kind:latest-1.9

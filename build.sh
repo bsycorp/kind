@@ -19,8 +19,8 @@ if [ -z "$KUBERNETES_VERSION" ]; then
 fi
 
 if [ -z "$STATIC_IP" ]; then
-	STATIC_IP="172.99.99.1"
-	echo "Defaulting static IP to '172.99.99.1'"
+	STATIC_IP="172.30.99.1"
+	echo "Defaulting static IP to '172.30.99.1'"
 fi
 
 function finish {

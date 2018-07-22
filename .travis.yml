@@ -2,9 +2,8 @@ sudo: required
 services: docker
 language: minimal
 
-env:
-  - KUBERNETES_VERSION: v1.9.7
-  
 script:
-  # building k8s may cause Travis to time out w/o output
-  - ./build.sh bsycorp/kind:latest-1.9
+  - docker login -u $DOCKERUSER -p $DOCKERPASS
+  - KUBERNETES_VERSION="v1.9.9" ./build.sh bsycorp/kind:latest-1.9
+  - KUBERNETES_VERSION="v1.10.5" ./build.sh bsycorp/kind:latest-1.10
+  - docker push bsycorp/kind

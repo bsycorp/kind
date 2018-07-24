@@ -23,9 +23,9 @@ tl;dr; Building on docker-in-docker it uses `minikube` and `kubeadm` to bootstra
 
 The simplest way to get a Kubernetes cluster running in CI is to use `minikube` and start with `--vm-driver none`, this uses `kubeadm` to bootstrap a set of local processes to start Kubernetes. This doesn't work out of the box in `dind` as `kubeadm` assumes it is running in a SystemD environment, which alpine is not. It also downloads binaries and bootstraps the cluster everytime it is run which depending on your network and resources takes around 4 minutes.
 
-To make this process fast, `kind` aims to move all the cluster bootstrapping to the container build phase, so when you run `kind` it is already bootstrapped and is effectively just starting the `kubelet` process with a preconfigured `etcd`, `apiserver` etc. To achieve this we need to initially configure `kubeadm` with a static IP that will be routable both during the build phase, and the run phase, we have arbitrarily chosen `172.99.99.1` for that address.
+To make this process fast, `kind` aims to move all the cluster bootstrapping to the container build phase, so when you run `kind` it is already bootstrapped and is effectively just starting the `kubelet` process with a preconfigured `etcd`, `apiserver` etc. To achieve this we need to initially configure `kubeadm` with a static IP that will be routable both during the build phase, and the run phase, we have arbitrarily chosen `172.30.99.1` for that address.
 
-During the build phase `kind` adds `172.99.99.1` to the default network interface for the container `eth0` and forces `kubeadm` and friends to use this address when bootstrapping the cluster. During the container run phase (when you are running `kind` in your environment) this static IP address is again attached to the default network interface `eth0` for the container so when `kubelet` is run the IP that it has been configured against is still routable.
+During the build phase `kind` adds `172.30.99.1` to the default network interface for the container `eth0` and forces `kubeadm` and friends to use this address when bootstrapping the cluster. During the container run phase (when you are running `kind` in your environment) this static IP address is again attached to the default network interface `eth0` for the container so when `kubelet` is run the IP that it has been configured against is still routable.
 
 Doing this network trickery means we can move all the hard work into the build phase, and `kind` can startup fast. In our CI environment using `kind` a single node cluster comes up and is ready to use in 30 seconds, down from 4 minutes in the simple minikube implementation (3+ minutes is a lot in a CI pipeline!).
 
@@ -49,7 +49,7 @@ As you want your docker images you want to test to be built into `kind` docker h
 Not sure as we are running this in an on-premise Gitlab install, but interested to hear feedback from people where it does or doesn't work. As above it is designed to be like `docker:dind` but with Kubernetes, so in theory anywhere `docker:dind` runs this should run, and like `docker:dind` it requires the container be launched as `--privileged` which generally cloud providers don't like.
 
 Work:
-- Gitlab On-Premise (CE or EE*)
+- Gitlab On-Premise (CE or EE*) ([example](https://github.com/bsycorp/kind-gitlab-example))
 - CircleCI `machine` executors ([example](https://github.com/bsycorp/kind-circleci-example))
 - Travis CI ([example](https://github.com/bsycorp/kind-travis-example))
 
@@ -60,20 +60,26 @@ Should work:
 Unlikely to work:
 - Bitbucket Pipelines, has a magic `docker: true` flag so will likely not work
 
-An example Gitlab CI YAML would be :
+## How to build for myself?
 
-```
-integration-test:
-  services:
-    - bsycorp/kind:latest-1.9
-  image: alpine
-  stage: build
-  script:
-    - wait-for-kind.sh
-    - test.sh
-```
+Pre-built images are available on dockerhub (https://hub.docker.com/r/bsycorp/kind/), but if you want to bake in your own images to make it as fast as possible, you will want to built it yourself.
 
-https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#define-image-and-services-from-gitlab-ci-yml
+Run `./build.sh <image name>` to build the image. Add your custom images to `/images.sh` to have them be available at runtime. These environment variables are available to configure the build:
+
+- DOCKER_IMAGE: defaults to `stable-dind`
+- MINIKUBE_VERSION: defaults to `v0.28.0`
+- KUBERNETES_VERSION: defaults to `v1.10.5`
+- STATIC_IP: defaults to `172.30.99.1`
+
+We use git submodules to pull in this project and then add images and CI configuration around it, but there are other ways to do it.
+
+## Build hooks
+
+There are two hooks available during the `kind` build, `before-cluster.sh` and `after-cluster.sh`. As their names suggest they are run directly before and after the kube cluster is created.
+
+Examples of this scripts exist in the repo already, but they can be overwritten / extended to add extra functionality.
+
+## kubectl client configuraiton
 
 To use generated kube config:
 
@@ -102,25 +108,6 @@ kubectl config set-context kind --cluster=kind-cluster --user=kind-admin
 kubectl config use-context kind
 kubectl get nodes
 ```
-
-## How to build for myself?
-
-Pre-built images are available on dockerhub (https://hub.docker.com/r/bsycorp/kind/), but if you want to bake in your own images to make it as fast as possible, you will want to built it yourself.
-
-Run `./build.sh <image name>` to build the image. Add your custom images to `/images.sh` to have them be available at runtime. These environment variables are available to configure the build:
-
-- DOCKER_IMAGE: defaults to `stable-dind`
-- MINIKUBE_VERSION: defaults to `v0.28.0`
-- KUBERNETES_VERSION: defaults to `v1.10.5`
-- STATIC_IP: defaults to `172.99.99.1`
-
-We use git submodules to pull in this project and then add images and CI configuration around it, but there are other ways to do it.
-
-## Build hooks
-
-There are two hooks available during the `kind` build, `before-cluster.sh` and `after-cluster.sh`. As their names suggest they are run directly before and after the kube cluster is created.
-
-Examples of this scripts exist in the repo already, but they can be overwritten / extended to add extra functionality.
 
 ## How to pull images from a private registry?
 

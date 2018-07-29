@@ -59,6 +59,7 @@ replaceHost
 
 # run kubeadm to create cluster - ignore preflights as there will be failures because of swap, systemd, lots of things..
 /usr/bin/kubeadm init --config /var/lib/kubeadm.yaml --ignore-preflight-errors=all
+
 # use kube-config that contains the certs, rather than referencing files
 cp /etc/kubernetes/admin.conf /root/.kube/config
 
@@ -69,8 +70,8 @@ kubectl -n kube-system delete deploy kubernetes-dashboard | cat
 kubectl -n kube-system delete po storage-provisioner | cat
 
 # mark single node as node, as well as master, remove master taint or things might not schedule.
-kubectl label node minikube node-role.kubernetes.io/node=
-kubectl taint no minikube node-role.kubernetes.io/master:NoSchedule-
+kubectl label node minikube node-role.kubernetes.io/node= | cat
+kubectl taint node minikube node-role.kubernetes.io/master:NoSchedule- | cat
 
 # workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
 kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: [0-9]*|maxPerCore: 0|g' > kube-proxy-cm.yaml

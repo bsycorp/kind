@@ -1,5 +1,7 @@
 `kind`, like `docker:dind` but aims to make a full Kubernetes cluster available to test against in your CI pipeline. It is fast to startup and totally ephemeral, so you get a clean start for each CI run.
 
+[![Build Status](https://travis-ci.org/bsycorp/kind.svg?branch=master)](https://travis-ci.org/bsycorp/kind)
+
 ## Why?
 
 We run workloads in Kubernetes, and run our CI on Kubernetes too, but in our CI pipeline we wanted a way to have a quick and reliable way of having the current code under test, built, deployed and tested but then have the environment be torn down after testing. We initially considered deploying to a proper cluster but the overhead of pushing images to a registry just for a CI test, and the setup / teardown of resources was too much, we wanted something totally ephemeral so building on top of docker's dind made sense.

@@ -1,6 +1,6 @@
 #!/bin/bash
 # KUBERNETES_VERSION="v1.10.0"
-# MINIKUBE_VERSION="v0.28.0"
+# MINIKUBE_VERSION="v0.28.2"
 IMAGE="$1"
 
 if [ -z "$DOCKER_IMAGE" ]; then
@@ -9,8 +9,8 @@ if [ -z "$DOCKER_IMAGE" ]; then
 fi
 
 if [ -z "$MINIKUBE_VERSION" ]; then
-	MINIKUBE_VERSION="v0.28.0"
-	echo "Defaulting Minikube version to 'v0.28.0'"
+	MINIKUBE_VERSION="v0.28.2"
+	echo "Defaulting Minikube version to 'v0.28.2'"
 fi
 
 if [ -z "$KUBERNETES_VERSION" ]; then

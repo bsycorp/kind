@@ -2,6 +2,16 @@
 
 [![Build Status](https://travis-ci.org/bsycorp/kind.svg?branch=master)](https://travis-ci.org/bsycorp/kind)
 
+## Quickstart
+
+Use prebuilt images from Dockerhub: https://hub.docker.com/r/bsycorp/kind/
+
+Run:
+
+`docker run -it --privileged bsycorp/kind:latest-1.10 -p 8443:8443 -p 10080:10080`
+
+Or more likely run CI in, [see examples](https://github.com/bsycorp/kind#can-i-use-it-on-my-cloud-cicd-provider)
+
 ## Why?
 
 We run workloads in Kubernetes, and run our CI on Kubernetes too, but in our CI pipeline we wanted a way to have a quick and reliable way of having the current code under test, built, deployed and tested but then have the environment be torn down after testing. We initially considered deploying to a proper cluster but the overhead of pushing images to a registry just for a CI test, and the setup / teardown of resources was too much, we wanted something totally ephemeral so building on top of docker's dind made sense.
@@ -119,12 +129,12 @@ Your `kind` CI  build script might look like:
 
 ```
 echo "$(aws ecr get-login --no-include-email --region some-region)" >> ./kind/before-cluster.sh
-docker pull 12345.ecr.amazonaws.com/smth:latest
+echo "docker pull 12345.ecr.amazonaws.com/smth:latest" >> ./kind/before-cluster.sh
 
 or
 
 echo "docker login -u username -p $REGISTRY_TOKEN_FROM_CI registry.smth.com" >> ./kind/before-cluster.sh
-docker pull registry.smth.com/app:latest
+echo "docker pull registry.smth.com/app:latest" >> ./kind/before-cluster.sh
 ```
 
 Then the `before-cluster.sh` hook will fire during the build and have all the details it needs to login and pull the private images.

@@ -4,7 +4,7 @@ language: minimal
 
 script:
   - docker login -u $DOCKERUSER -p $DOCKERPASS
-  - KUBERNETES_VERSION="v1.9.9" ./build.sh bsycorp/kind:latest-1.9
-  - KUBERNETES_VERSION="v1.10.6" ./build.sh bsycorp/kind:latest-1.10
-  - KUBERNETES_VERSION="v1.11.1" ./build.sh bsycorp/kind:latest-1.11
+  - KUBERNETES_VERSION="v1.9.9" ./build.sh bsycorp/kind:latest-1.9 bsycorp/kind:$KUBERNETES_VERSION
+  - KUBERNETES_VERSION="v1.10.6" ./build.sh bsycorp/kind:latest-1.10 bsycorp/kind:$KUBERNETES_VERSION
+  - KUBERNETES_VERSION="v1.11.1" ./build.sh bsycorp/kind:latest-1.11 bsycorp/kind:$KUBERNETES_VERSION
   - docker push bsycorp/kind

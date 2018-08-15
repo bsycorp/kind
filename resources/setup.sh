@@ -25,7 +25,6 @@ echo "#!/bin/sh" > /usr/local/bin/systemctl
 chmod +x /usr/local/bin/systemctl
 
 # add glibc as kube/minikube/things need it
-curl -Lo /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
 curl -Lo glibc.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk
 apk add glibc.apk
 rm -f glibc.apk

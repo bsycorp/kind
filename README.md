@@ -33,7 +33,7 @@ As an applcation sitting on top of kubernetes, we don't really need a full multi
 
 tl;dr; Building on docker-in-docker it uses `minikube` and `kubeadm` to bootstrap and pre-configure a cluster at build time that works at runtime.
 
-The simplest way to get a Kubernetes cluster running in CI is to use `minikube` and start with `--vm-driver none`, this uses `kubeadm` to bootstrap a set of local processes to start Kubernetes. This doesn't work out of the box in `dind` as `kubeadm` assumes it is running in a SystemD environment, which alpine is not. It also downloads binaries and bootstraps the cluster everytime it is run which depending on your network and resources takes around 4 minutes.
+The simplest way to get a Kubernetes cluster running in CI is to use `minikube` and start with `--vm-driver none`, this uses `kubeadm` to bootstrap a set of local processes to start Kubernetes. This doesn't work out of the box in `dind` as `kubeadm` assumes it is running in a systemd environment, which alpine is not. It also downloads binaries and bootstraps the cluster everytime it is run which depending on your network and resources takes around 4 minutes.
 
 To make this process fast, `kind` aims to move all the cluster bootstrapping to the container build phase, so when you run `kind` it is already bootstrapped and is effectively just starting the `kubelet` process with a preconfigured `etcd`, `apiserver` etc. To achieve this we need to initially configure `kubeadm` with a static IP that will be routable both during the build phase, and the run phase, we have arbitrarily chosen `172.30.99.1` for that address.
 
@@ -58,15 +58,15 @@ As you want your docker images you want to test to be built into `kind` docker h
 
 ## Can I use it on my Cloud CI/CD provider?
 
-Not sure as we are running this in an on-premise Gitlab install, but interested to hear feedback from people where it does or doesn't work. As above it is designed to be like `docker:dind` but with Kubernetes, so in theory anywhere `docker:dind` runs this should run, and like `docker:dind` it requires the container be launched as `--privileged` which generally cloud providers don't like.
+Not sure as we are running this in an on-premise GitLab install, but interested to hear feedback from people where it does or doesn't work. As above it is designed to be like `docker:dind` but with Kubernetes, so in theory anywhere `docker:dind` runs this should run, and like `docker:dind` it requires the container be launched as `--privileged` which generally cloud providers don't like.
 
 Work:
-- Gitlab On-Premise (CE or EE*) ([example](https://github.com/bsycorp/kind-gitlab-example))
+- GitLab On-Premise (CE or EE*) ([example](https://github.com/bsycorp/kind-gitlab-example))
 - CircleCI `machine` executors ([example](https://github.com/bsycorp/kind-circleci-example))
 - Travis CI ([example](https://github.com/bsycorp/kind-travis-example))
 
 Should work:
-- Gitlab.com with BYO Docker or Kubenetes runners
+- GitLab.com with BYO Docker or Kubenetes runners
 - Codeship Pro
 
 Unlikely to work:

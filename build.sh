@@ -39,6 +39,7 @@ docker cp resources/setup.sh $CONTAINER_ID:/setup.sh
 docker cp resources/start.sh $CONTAINER_ID:/start.sh
 docker cp resources/kubelet.sh $CONTAINER_ID:/kubelet.sh
 docker cp resources/supervisord.conf $CONTAINER_ID:/etc/supervisord.conf
+docker cp resources/sgerrand.rsa.pub $CONTAINER_ID:/etc/apk/keys/sgerrand.rsa.pub
 docker cp before-cluster.sh $CONTAINER_ID:/before-cluster.sh
 docker cp after-cluster.sh $CONTAINER_ID:/after-cluster.sh
 

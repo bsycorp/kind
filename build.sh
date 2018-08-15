@@ -1,26 +1,27 @@
 #!/bin/bash
 # KUBERNETES_VERSION="v1.10.0"
 # MINIKUBE_VERSION="v0.28.2"
-IMAGE="$1"
+TAG_LATEST="$1"
+TAG_VERSION="$2"
 
 if [ -z "$DOCKER_IMAGE" ]; then
 	DOCKER_IMAGE="stable-dind"
-	echo "Defaulting Docker image to 'stable-dind'"
+	echo "Defaulting Docker image to $DOCKER_IMAGE"
 fi
 
 if [ -z "$MINIKUBE_VERSION" ]; then
 	MINIKUBE_VERSION="v0.28.2"
-	echo "Defaulting Minikube version to 'v0.28.2'"
+	echo "Defaulting Minikube version to $MINIKUBE_VERSION"
 fi
 
 if [ -z "$KUBERNETES_VERSION" ]; then
 	KUBERNETES_VERSION="v1.10.5"
-	echo "Defaulting Kubernetes version to 'v1.10.0'"
+	echo "Defaulting Kubernetes version to $KUBERNETES_VERSION"
 fi
 
 if [ -z "$STATIC_IP" ]; then
 	STATIC_IP="172.30.99.1"
-	echo "Defaulting static IP to '172.30.99.1'"
+	echo "Defaulting static IP to $STATIC_IP"
 fi
 
 function finish {
@@ -47,4 +48,6 @@ echo "Commiting new container"
 docker commit \
 	-c 'CMD ["/usr/bin/supervisord", "--nodaemon", "-c", "/etc/supervisord.conf"]' \
 	-c 'ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
-	$CONTAINER_ID $IMAGE
+	$CONTAINER_ID $TAG_LATEST
+
+docker tag $TAG_LATEST $TAG_VERSION

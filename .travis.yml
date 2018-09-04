@@ -1,7 +1,9 @@
 sudo: required
 services: docker
 language: minimal
-
+branches:
+  only:
+  - master
 script:
   - docker login -u $DOCKERUSER -p $DOCKERPASS
   - export KUBERNETES_VERSION="v1.9.10"; ./build.sh bsycorp/kind:latest-1.9 bsycorp/kind:$KUBERNETES_VERSION

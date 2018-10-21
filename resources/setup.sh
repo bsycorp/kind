@@ -49,7 +49,7 @@ replaceHost
 # some versions of minikube put certs in different places, so align
 if [ ! -f /var/lib/localkube/certs/ca.crt ]; then
     mkdir -p /var/lib/localkube/certs
-    cp /var/lib/minikube/certs/ca.crt /var/lib/localkube/certs/ca.crt
+    cp /var/lib/minikube/certs/ca.crt /var/lib/localkube/certs/ca.crt | cat
 fi
 
 # try and start kubelet in the background, keep restarting it as it will fail until kubeadm runs.

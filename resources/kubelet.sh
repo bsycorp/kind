@@ -1,7 +1,6 @@
 #!/bin/bash
 sleep 2
-/usr/bin/kubelet --cadvisor-port=0 \
-				 --hostname-override=minikube \
+/usr/bin/kubelet --hostname-override=minikube \
 				 --cluster-domain=cluster.local \
 				 --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf \
 				 --pod-manifest-path=/etc/kubernetes/manifests \

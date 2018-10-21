@@ -9,5 +9,5 @@ script:
   - export KUBERNETES_VERSION="v1.9.11"; ./build.sh bsycorp/kind:latest-1.9 bsycorp/kind:$KUBERNETES_VERSION
   - export KUBERNETES_VERSION="v1.10.9"; ./build.sh bsycorp/kind:latest-1.10 bsycorp/kind:$KUBERNETES_VERSION
   - export KUBERNETES_VERSION="v1.11.3"; ./build.sh bsycorp/kind:latest-1.11 bsycorp/kind:$KUBERNETES_VERSION
-  - export KUBERNETES_VERSION="v1.12.1"; ./build.sh bsycorp/kind:latest-1.11 bsycorp/kind:$KUBERNETES_VERSION
+  - export KUBERNETES_VERSION="v1.12.1"; ./build.sh bsycorp/kind:latest-1.12 bsycorp/kind:$KUBERNETES_VERSION
   - docker push bsycorp/kind

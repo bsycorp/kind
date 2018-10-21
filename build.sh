@@ -10,7 +10,7 @@ if [ -z "$DOCKER_IMAGE" ]; then
 fi
 
 if [ -z "$MINIKUBE_VERSION" ]; then
-	MINIKUBE_VERSION="v0.28.2"
+	MINIKUBE_VERSION="v0.30.0"
 	echo "Defaulting Minikube version to $MINIKUBE_VERSION"
 fi
 

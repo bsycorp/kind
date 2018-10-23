@@ -8,7 +8,7 @@ Use prebuilt images from Dockerhub: https://hub.docker.com/r/bsycorp/kind/
 
 Run:
 
-`docker run -it --privileged bsycorp/kind:latest-1.10 -p 8443:8443 -p 10080:10080`
+`docker run -it --privileged -p 8443:8443 -p 10080:10080 bsycorp/kind:latest-1.10`
 
 Or more likely run CI in, [see examples](https://github.com/bsycorp/kind#can-i-use-it-on-my-cloud-cicd-provider)
 

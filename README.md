@@ -138,3 +138,13 @@ echo "docker pull registry.smth.com/app:latest" >> ./kind/before-cluster.sh
 ```
 
 Then the `before-cluster.sh` hook will fire during the build and have all the details it needs to login and pull the private images.
+
+or dynamically supply the credentials when running the image:
+
+```
+docker run --privileged \
+  -e REGISTRY="registry.smth.com" \
+  -e REGISTRY_USER="username" \
+  -e REGISTRY_PASSWORD='$REGISTRY_TOKEN' \
+  bsycorp/kind:latest-1.10
+```

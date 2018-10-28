@@ -19,6 +19,13 @@ docker info
 echo "Docker ready"
 touch /var/kube-config/docker-ready
 
+echo "Logging into docker-registry $REGISTRY with user $REGISTRY_USER"
+if [[ -n "${REGISTRY}" ]] && [[ -n "${REGISTRY_USER}" ]] && [[ -n "${REGISTRY_PASSWORD}" ]]; then
+    docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" $REGISTRY || echo "WARN: Login Failed!"
+else
+    echo "no docker-registry/-credentials supplied"
+fi
+
 echo "Starting config server.."
 supervisorctl -c /etc/supervisord.conf start config-serve
 

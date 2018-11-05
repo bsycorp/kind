@@ -89,6 +89,8 @@ rm -f kube-proxy-cm.yaml
 cp /root/.minikube/client.crt /var/kube-config/client.crt
 cp /root/.minikube/client.key /var/kube-config/client.key
 cp /root/.minikube/ca.crt /var/kube-config/ca.crt
+# tweak cluster naming in config so it is identifiable as kind to test clients
+sed -i "s|kubernetes\|kubernetes-admin@kubernetes|kind|g" /root/.kube/config
 cp /root/.kube/config /var/kube-config/config
 chmod 644 /var/kube-config/*
 

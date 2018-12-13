@@ -6,7 +6,8 @@ branches:
   - master
 script:
   - docker login -u $DOCKERUSER -p $DOCKERPASS
-  - export KUBERNETES_VERSION="v1.10.10"; ./build.sh bsycorp/kind:latest-1.10 bsycorp/kind:$KUBERNETES_VERSION
-  - export KUBERNETES_VERSION="v1.11.4"; ./build.sh bsycorp/kind:latest-1.11 bsycorp/kind:$KUBERNETES_VERSION
-  - export KUBERNETES_VERSION="v1.12.2"; ./build.sh bsycorp/kind:latest-1.12 bsycorp/kind:$KUBERNETES_VERSION
+  - export KUBERNETES_VERSION="v1.10.11"; ./build.sh bsycorp/kind:latest-1.10 bsycorp/kind:$KUBERNETES_VERSION
+  - export KUBERNETES_VERSION="v1.11.5"; ./build.sh bsycorp/kind:latest-1.11 bsycorp/kind:$KUBERNETES_VERSION
+  - export KUBERNETES_VERSION="v1.12.3"; ./build.sh bsycorp/kind:latest-1.12 bsycorp/kind:$KUBERNETES_VERSION
+  - export KUBERNETES_VERSION="v1.13.1"; ./build.sh bsycorp/kind:latest-1.13 bsycorp/kind:$KUBERNETES_VERSION
   - docker push bsycorp/kind

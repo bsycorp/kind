@@ -33,6 +33,9 @@ trap finish EXIT
 
 set -ex
 
+# Required for `kubectl port-forward` to work
+apk add --no-cache socat
+
 echo "Starting dind"
 CONTAINER_ID=$(docker run --privileged -d --rm docker:$DOCKER_IMAGE)
 docker cp resources/setup.sh $CONTAINER_ID:/setup.sh

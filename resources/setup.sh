@@ -13,7 +13,7 @@ echo $STATIC_IP > /var/kube-config/static-ip
 docker info
 
 # add deps
-apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata
+apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat
 
 # add a static / known ip to the existing default network interface so that we can configure kube component to use that IP, and can re-use that IP again at boot time.
 ORIG_IP=$(hostname -i)

@@ -1,13 +1,15 @@
 sudo: required
 services: docker
 language: minimal
+env:
+  - KUBERNETES_VERSION="v1.11.9" DOCKER_IMAGE_TAG="latest-1.11"
+  - KUBERNETES_VERSION="v1.12.7" DOCKER_IMAGE_TAG="latest-1.12"
+  - KUBERNETES_VERSION="v1.13.5" DOCKER_IMAGE_TAG="latest-1.13"
+  - KUBERNETES_VERSION="v1.14.0" DOCKER_IMAGE_TAG="latest-1.14" MINIKUBE_VERSION="v1.0.0"
 branches:
   only:
   - master
 script:
   - docker login -u $DOCKERUSER -p $DOCKERPASS
-  - export KUBERNETES_VERSION="v1.11.9"; ./build.sh bsycorp/kind:latest-1.11 bsycorp/kind:$KUBERNETES_VERSION
-  - export KUBERNETES_VERSION="v1.12.7"; ./build.sh bsycorp/kind:latest-1.12 bsycorp/kind:$KUBERNETES_VERSION
-  - export KUBERNETES_VERSION="v1.13.5"; ./build.sh bsycorp/kind:latest-1.13 bsycorp/kind:$KUBERNETES_VERSION
-  - export KUBERNETES_VERSION="v1.14.0"; export MINIKUBE_VERSION="v1.0.0"; ./build.sh bsycorp/kind:latest-1.14 bsycorp/kind:$KUBERNETES_VERSION
-  - docker push bsycorp/kind
+  - ./build.sh bsycorp/kind:$DOCKER_IMAGE_TAG bsycorp/kind:$KUBERNETES_VERSION
+  - docker push bsycorp/kind:$DOCKER_IMAGE_TAG

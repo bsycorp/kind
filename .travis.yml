@@ -15,3 +15,4 @@ jobs:
       script:
         - docker login -u $DOCKERUSER -p $DOCKERPASS
         - docker push bsycorp/kind:$DOCKER_IMAGE_TAG
+      env: KUBERNETES_VERSION="" DOCKER_IMAGE_TAG=""

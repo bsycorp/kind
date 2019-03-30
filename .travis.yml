@@ -6,10 +6,13 @@ env:
   - KUBERNETES_VERSION="v1.12.7" DOCKER_IMAGE_TAG="latest-1.12"
   - KUBERNETES_VERSION="v1.13.5" DOCKER_IMAGE_TAG="latest-1.13"
   - KUBERNETES_VERSION="v1.14.0" DOCKER_IMAGE_TAG="latest-1.14" MINIKUBE_VERSION="v1.0.0"
-branches:
-  only:
-  - master
-script:
-  - docker login -u $DOCKERUSER -p $DOCKERPASS
-  - ./build.sh bsycorp/kind:$DOCKER_IMAGE_TAG bsycorp/kind:$KUBERNETES_VERSION
-  - docker push bsycorp/kind:$DOCKER_IMAGE_TAG
+jobs:
+  include:
+    - stage: build
+      script:
+        - ./build.sh bsycorp/kind:$DOCKER_IMAGE_TAG bsycorp/kind:$KUBERNETES_VERSION
+    - stage: docker push
+      if: branch = master
+      script:
+        - docker login -u $DOCKERUSER -p $DOCKERPASS
+        - docker push bsycorp/kind:$DOCKER_IMAGE_TAG

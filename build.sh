@@ -35,6 +35,7 @@ set -ex
 
 echo "Starting dind"
 CONTAINER_ID=$(docker run --privileged -d --rm docker:$DOCKER_IMAGE)
+docker cp resources/entrypoint.sh $CONTAINER_ID:/entrypoint.sh
 docker cp resources/setup.sh $CONTAINER_ID:/setup.sh
 docker cp resources/start.sh $CONTAINER_ID:/start.sh
 docker cp resources/kubelet.sh $CONTAINER_ID:/kubelet.sh
@@ -47,6 +48,7 @@ echo "Starting setup"
 docker exec $CONTAINER_ID /setup.sh $KUBERNETES_VERSION $MINIKUBE_VERSION $STATIC_IP
 echo "Commiting new container"
 docker commit \
+	-c 'ENTRYPOINT ["/entrypoint.sh"]' \
 	-c 'CMD ["/usr/bin/supervisord", "--nodaemon", "-c", "/etc/supervisord.conf"]' \
 	-c 'ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
 	$CONTAINER_ID $TAG_LATEST

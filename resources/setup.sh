@@ -37,11 +37,11 @@ curl -Lo /usr/local/bin/minikube https://storage.googleapis.com/minikube/release
 curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x /usr/local/bin/kubectl
 
 function replaceHost(){
-    find /var /etc /root -type f -not -path "/etc/hosts" -not -size +1M -exec grep -il "$ORIG_IP" {} \; | xargs sed -i "s|$ORIG_IP|$STATIC_IP|g" | cat
+    find /var /etc /root -type f -not -path "/etc/hosts" -not -size +1M -exec grep -il "$ORIG_IP" {} \; | xargs sed -i "s|$ORIG_IP|$STATIC_IP|g" || true
 }
 
 # start minikube, will fail, but s'ok is just for downloading things
-minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP | cat
+minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP || true
 
 # fix minikube generated configs, this shouldn't be required if minikube behaved itself / had args for all the things
 replaceHost
@@ -49,7 +49,7 @@ replaceHost
 # some versions of minikube put certs in different places, so align
 if [ ! -f /var/lib/localkube/certs/ca.crt ]; then
     mkdir -p /var/lib/localkube/certs
-    cp /var/lib/minikube/certs/ca.crt /var/lib/localkube/certs/ca.crt | cat
+    cp /var/lib/minikube/certs/ca.crt /var/lib/localkube/certs/ca.crt || true
 fi
 
 # try and start kubelet in the background, keep restarting it as it will fail until kubeadm runs.
@@ -59,7 +59,7 @@ fi
         echo "(Re)starting kubelet.."
         # ensure replace host is run before kubelet is fired, can't exactly time when kubeadm creates configs 
         replaceHost 
-        /kubelet.sh | cat
+        /kubelet.sh || true
     done
 } &
 
@@ -70,14 +70,14 @@ fi
 cp /etc/kubernetes/admin.conf /root/.kube/config
 
 # disable unneeded stuff
-minikube addons disable dashboard
-minikube addons disable storage-provisioner
-kubectl -n kube-system delete deploy kubernetes-dashboard | cat
-kubectl -n kube-system delete po storage-provisioner | cat
+minikube addons disable dashboard || true
+minikube addons disable storage-provisioner || true
+kubectl -n kube-system delete deploy kubernetes-dashboard || true
+kubectl -n kube-system delete po storage-provisioner || true
 
 # mark single node as node, as well as master, remove master taint or things might not schedule.
-kubectl label node minikube node-role.kubernetes.io/node= | cat
-kubectl taint node minikube node-role.kubernetes.io/master:NoSchedule- | cat
+kubectl label node minikube node-role.kubernetes.io/node= || true
+kubectl taint node minikube node-role.kubernetes.io/master:NoSchedule- || true
 
 # workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
 kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: [0-9]*|maxPerCore: 0|g' > kube-proxy-cm.yaml

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 KUBERNETES_VERSION=$(cat /var/kube-config/kubernetes-version)
 STATIC_IP=$(cat /var/kube-config/static-ip)
 

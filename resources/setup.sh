@@ -1,5 +1,5 @@
 #!/bin/sh
-set -ex
+set -e
 KUBERNETES_VERSION="$1"
 MINIKUBE_VERSION="$2"
 STATIC_IP="$3"
@@ -84,6 +84,12 @@ kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: [0-9]*|max
 kubectl -n kube-system delete cm kube-proxy
 kubectl -n kube-system create -f kube-proxy-cm.yaml
 rm -f kube-proxy-cm.yaml
+
+# workaround for https://github.com/bsycorp/kind/issues/19
+kubectl -n kube-system get cm coredns -o yaml | sed 's|loop||g' > coredns-cm.yaml
+kubectl -n kube-system delete cm coredns
+kubectl -n kube-system create -f coredns-cm.yaml
+rm -f coredns-cm.yaml
 
 # expose kube config so external consumers can call in
 cp /root/.minikube/client.crt /var/kube-config/client.crt

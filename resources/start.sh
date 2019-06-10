@@ -49,7 +49,7 @@ while true; do
     POD_STATES=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].state}' | tr ' ' '\n' | cut -d'[' -f 2 | cut -d':' -f 1 | sort | uniq)
     POD_READINESS=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].ready}' | tr ' ' '\n' | sort | uniq)
     POD_COUNT=$(kubectl get po -n kube-system --no-headers | wc -l)
-    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -gt 6 ]; then
+    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -gt 7 ]; then
         echo "startup successful"
         break
     fi

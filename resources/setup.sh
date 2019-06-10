@@ -71,9 +71,7 @@ cp /etc/kubernetes/admin.conf /root/.kube/config
 
 # disable unneeded stuff
 minikube addons disable dashboard || true
-minikube addons disable storage-provisioner || true
 kubectl -n kube-system delete deploy kubernetes-dashboard || true
-kubectl -n kube-system delete po storage-provisioner || true
 
 # mark single node as node, as well as master, remove master taint or things might not schedule.
 kubectl label node minikube node-role.kubernetes.io/node= || true
@@ -118,7 +116,7 @@ while true; do
     POD_STATES=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].state}' | tr ' ' '\n' | cut -d'[' -f 2 | cut -d':' -f 1 | sort | uniq)
     POD_READINESS=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].ready}' | tr ' ' '\n' | sort | uniq)
     POD_COUNT=$(kubectl get po -n kube-system --no-headers | wc -l)
-    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -gt 6 ]; then
+    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -gt 7 ]; then
         echo "startup successful"
         break
     fi

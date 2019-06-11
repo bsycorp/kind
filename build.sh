@@ -31,7 +31,7 @@ function finish {
 }
 trap finish EXIT
 
-set -ex
+set -e
 
 echo "Starting dind"
 CONTAINER_ID=$(docker run --privileged -d --rm docker:$DOCKER_IMAGE)

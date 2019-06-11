@@ -11,7 +11,7 @@ echo "Setting up networking.." # use hard-coded IP to make kube happy (all the t
 ip addr add $STATIC_IP/32 dev eth0
 
 echo "Extracting cache.." # extract the tarred up docker images from build phase, we do this so when dind starts again in run phase we have all our stuff still, and its fast.
-(mkdir -p /var/lib/docker; cd /var/lib/docker; tar -xf /docker-cache.tar)
+(mkdir -p /var/lib/docker; cd /var/lib/docker; lz4 -d /docker-cache.tar.lz4 | tar -x)
 
 supervisorctl -c /etc/supervisord.conf start dockerd
 sleep 2

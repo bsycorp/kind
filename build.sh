@@ -24,6 +24,11 @@ if [ -z "$STATIC_IP" ]; then
 	echo "Defaulting static IP to $STATIC_IP"
 fi
 
+if [ -z "$NETWORK" ]; then
+	NETWORK="default"
+	echo "Defaulting docker network to $NETWORK"
+fi
+
 function finish {
   echo "Cleanup"
   docker rm -f $CONTAINER_ID
@@ -34,7 +39,7 @@ trap finish EXIT
 set -e
 
 echo "Starting dind"
-CONTAINER_ID=$(docker run --privileged -d --rm docker:$DOCKER_IMAGE)
+CONTAINER_ID=$(docker run --network $NETWORK --privileged -d --rm docker:$DOCKER_IMAGE)
 docker cp resources/entrypoint.sh $CONTAINER_ID:/entrypoint.sh
 docker cp resources/setup.sh $CONTAINER_ID:/setup.sh
 docker cp resources/start.sh $CONTAINER_ID:/start.sh

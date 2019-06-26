@@ -31,7 +31,7 @@ rm -f glibc.apk
 
 # fire before cluster hook
 source /before-cluster.sh
-    
+
 # get kube binaries
 curl -Lo /usr/local/bin/minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && chmod +x /usr/local/bin/minikube
 curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x /usr/local/bin/kubectl
@@ -57,8 +57,8 @@ fi
     while [ ! -f /tmp/setup-done ]; do
         sleep 5
         echo "(Re)starting kubelet.."
-        # ensure replace host is run before kubelet is fired, can't exactly time when kubeadm creates configs 
-        replaceHost 
+        # ensure replace host is run before kubelet is fired, can't exactly time when kubeadm creates configs
+        replaceHost
         /kubelet.sh || true
     done
 } &
@@ -84,7 +84,7 @@ kubectl -n kube-system create -f kube-proxy-cm.yaml
 rm -f kube-proxy-cm.yaml
 
 # workaround for https://github.com/bsycorp/kind/issues/19
-kubectl -n kube-system get cm coredns -o yaml | sed 's|loop||g' > coredns-cm.yaml
+kubectl -n kube-system get cm coredns -o yaml | sed 's|/etc/resolv.conf|8.8.8.8 9.9.9.9|g' > coredns-cm.yaml
 kubectl -n kube-system delete cm coredns
 kubectl -n kube-system create -f coredns-cm.yaml
 rm -f coredns-cm.yaml

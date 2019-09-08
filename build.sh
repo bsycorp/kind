@@ -56,6 +56,9 @@ docker commit \
 	-c 'ENTRYPOINT ["/entrypoint.sh"]' \
 	-c 'CMD ["/usr/bin/supervisord", "--nodaemon", "-c", "/etc/supervisord.conf"]' \
 	-c 'ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+	-c 'EXPOSE 2375/tcp' \
+	-c 'EXPOSE 8443/tcp' \
+	-c 'EXPOSE 10080/tcp' \
 	$CONTAINER_ID $TAG_LATEST
 
 docker tag $TAG_LATEST $TAG_VERSION

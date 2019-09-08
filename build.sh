@@ -5,7 +5,7 @@ TAG_LATEST="$1"
 TAG_VERSION="$2"
 
 if [ -z "$DOCKER_IMAGE" ]; then
-	DOCKER_IMAGE="stable-dind"
+	DOCKER_IMAGE="18.06-dind"
 	echo "Defaulting Docker image to $DOCKER_IMAGE"
 fi
 

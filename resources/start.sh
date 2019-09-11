@@ -60,3 +60,6 @@ kubectl get po --all-namespaces
 # ready
 touch /var/kube-config/kubernetes-ready
 echo "Kubernetes ready"
+if [ -f "/kubernetes-ready.sh" ]; then
+   /bin/bash /kubernetes-ready.sh
+fi

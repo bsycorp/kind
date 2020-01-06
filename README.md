@@ -29,7 +29,7 @@ Excluding no.1 which uses `localkube` (which is deprecated), both no.2 and no.3 
 
 As an applcation sitting on top of kubernetes, we don't really need a full multi-node cluster to run our CI tests, we just need a single node+master. Since we only need a single instance, we don't need the complexity of docker-in-docker-in-docker, docker-in-docker is just fine (as we only have 1 instance vs 2+). This should make disk access faster (only 1 `dind`, so can use `overlay2`) which should help make our kube deploy and tests fast and it should be easier and more reliable to prime/bootstrap everything during build time and just start it up at runtime.
 
-## How does it work?
+## How does `kind` work?
 
 tl;dr; Building on docker-in-docker it uses `minikube` and `kubeadm` to bootstrap and pre-configure a cluster at build time that works at runtime.
 
@@ -43,11 +43,11 @@ Doing this network trickery means we can move all the hard work into the build p
 
 A further optimisation is to have the build phase `docker pull` any dependent images your Kubernetes resources will require, so when your CI process is deploying your Kubernetes resources it doesn't have to pull in any images over the network. To do this you will need to build your own version of `kind` and just overwrite the `/images.sh` file with the images your want to pull in.
 
-## How to use?
+## How do I use this?
 
 `kind` is a docker image that only runs as `--privileged`, that is designed to be run as a CI service, where by it is accessible over a known interface, normally `localhost`. Much like `docker:dind` on which it is based.
 
-Running it as a service means the container running your tests needs to know when `kind` is ready, and how to get the `kubectl` config to make cli calls. This is achieved via the config endpoint. By default this is exposed over port `10080` and is just a simple http server hosting files. 
+Running it as a service means the container running your tests needs to know when `kind` is ready, and how to get the `kubectl` config to make cli calls. This is achieved via the config endpoint. By default this is exposed over port `10080` and is just a simple http server hosting files.
 
 There are few important events that `kind` exposes:
 - When the docker host is ready, `http://localhost:10080/docker-ready` will return 200
@@ -60,19 +60,19 @@ As you want your docker images you want to test to be built into `kind` docker h
 
 Not sure as we are running this in an on-premise GitLab install, but interested to hear feedback from people where it does or doesn't work. As above it is designed to be like `docker:dind` but with Kubernetes, so in theory anywhere `docker:dind` runs this should run, and like `docker:dind` it requires the container be launched as `--privileged` which generally cloud providers don't like.
 
-Work:
+Tested an known to Work:
 - GitLab On-Premise (CE or EE*) ([example](https://github.com/bsycorp/kind-gitlab-example))
 - CircleCI `machine` executors ([example](https://github.com/bsycorp/kind-circleci-example))
 - Travis CI ([example](https://github.com/bsycorp/kind-travis-example))
 
-Should work:
+These should work:
 - GitLab.com with BYO Docker or Kubenetes runners
 - Codeship Pro
 
 Unlikely to work:
 - Bitbucket Pipelines, has a magic `docker: true` flag so will likely not work
 
-## How to build for myself?
+## How do I build this for myself?
 
 Pre-built images are available on dockerhub (https://hub.docker.com/r/bsycorp/kind/), but if you want to bake in your own images to make it as fast as possible, you will want to built it yourself.
 
@@ -104,7 +104,7 @@ kubectl get nodes
 To create/add custom local kube config with creds:
 
 ```
-wget http://localhost:10080/ca.crt 
+wget http://localhost:10080/ca.crt
 wget http://localhost:10080/client.crt
 wget http://localhost:10080/client.key
 
@@ -121,9 +121,9 @@ kubectl config use-context kind
 kubectl get nodes
 ```
 
-## How to pull images from a private registry?
+## How do I pull images from a private registry?
 
-Depending how you authenticate to your registry this can be a bit tricky. As the `./build.sh` script actually starts a docker container and configures it, because of this the container running your build hook scripts won't have access to all the environment variables / binaries it normally would. To work around this we just write out the build hook script in our outer CI process dynamically during the build. 
+Depending how you authenticate to your registry this can be a bit tricky. As the `./build.sh` script actually starts a docker container and configures it, because of this the container running your build hook scripts won't have access to all the environment variables / binaries it normally would. To work around this we just write out the build hook script in our outer CI process dynamically during the build.
 
 Your `kind` CI  build script might look like:
 

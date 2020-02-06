@@ -13,7 +13,7 @@ echo $STATIC_IP > /var/kube-config/static-ip
 docker info
 
 # add deps
-apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat lz4 lxc bridge
+apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat lz4
 
 # add a static / known ip to the existing default network interface so that we can configure kube component to use that IP, and can re-use that IP again at boot time.
 ORIG_IP=$(hostname -i)
@@ -40,21 +40,9 @@ function replaceHost(){
     find /var /etc /root -type f -not -path "/etc/hosts" -not -size +1M -exec grep -il "$ORIG_IP" {} \; | xargs sed -i "s|$ORIG_IP|$STATIC_IP|g" || true
 }
 
-
-# lxc profile create mod_br_netfilter
-# lxc profile set mod_br_netfilter linux.kernel_modules br_netfilter
-# lxc profile show mod_br_netfilter
-
-# # create fake /proc/sys/net/bridge/bridge-nf-call-iptables so minikube / kubeadm doesn't crack it
-# mkdir -p /lib/modules/4.19.76-linuxkit/modules.dep
-# modprobe br_netfilter
-touch /.dockerenv
-mkdir -p /proc/sys/net/bridge/ && echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
-
 # start minikube, will fail, but s'ok is just for downloading things
-# minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP || true
 minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP --extra-config=kubeadm.ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables,Service-Docker || true
-echo "GOT PAST MINIKUBE START!!!"
+
 # fix minikube generated configs, this shouldn't be required if minikube behaved itself / had args for all the things
 replaceHost
 
@@ -76,13 +64,8 @@ fi
 } &
 
 # run kubeadm to create cluster - ignore preflights as there will be failures because of swap, systemd, lots of things..
-echo "1!!!!!!"
 /usr/bin/kubeadm config migrate --old-config /var/lib/kubeadm.yaml --new-config /var/lib/kubeadm.yaml
-echo "2!!!!!!"
-cat /var/lib/kubeadm.yaml
-echo "3!!!!!!"
 /usr/bin/kubeadm init --config /var/lib/kubeadm.yaml --ignore-preflight-errors=all
-echo "4!!!!!!"
 
 # use kube-config that contains the certs, rather than referencing files
 cp /etc/kubernetes/admin.conf /root/.kube/config

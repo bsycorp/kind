@@ -10,7 +10,7 @@ if [ -z "$DOCKER_IMAGE" ]; then
 fi
 
 if [ -z "$MINIKUBE_VERSION" ]; then
-	MINIKUBE_VERSION="v1.0.1"
+	MINIKUBE_VERSION="v1.3.0"
 	echo "Defaulting Minikube version to $MINIKUBE_VERSION"
 fi
 
@@ -39,7 +39,7 @@ trap finish EXIT
 set -e
 
 echo "Starting dind"
-CONTAINER_ID=$(docker run -e DOCKER_TLS_CERTDIR=/certs --network $NETWORK --privileged -d --rm docker:$DOCKER_IMAGE)
+CONTAINER_ID=$(docker run --network $NETWORK --privileged -d --rm docker:$DOCKER_IMAGE dockerd)
 echo $CONTAINER_ID
 docker cp resources/entrypoint.sh $CONTAINER_ID:/entrypoint.sh
 docker cp resources/setup.sh $CONTAINER_ID:/setup.sh

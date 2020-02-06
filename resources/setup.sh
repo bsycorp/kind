@@ -140,7 +140,6 @@ tar -c -C /var/lib/docker ./ | lz4 -3 > /docker-cache.tar.lz4
 
 # cleanup
 rm -f /setup.sh
-rm -f /images.sh
 
 # cleanup extra binaries
 rm -f /usr/local/bin/minikube

@@ -40,7 +40,6 @@ set -e
 
 echo "Starting dind"
 CONTAINER_ID=$(docker run --network $NETWORK --privileged -d --rm -e DOCKER_TLS_CERTDIR='' docker:$DOCKER_IMAGE dockerd)
-echo $CONTAINER_ID
 docker cp resources/entrypoint.sh $CONTAINER_ID:/entrypoint.sh
 docker cp resources/setup.sh $CONTAINER_ID:/setup.sh
 docker cp resources/start.sh $CONTAINER_ID:/start.sh

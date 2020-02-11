@@ -41,7 +41,7 @@ During the build phase `kind` adds `172.30.99.1` to the default network interfac
 
 Doing this network trickery means we can move all the hard work into the build phase, and `kind` can startup fast. In our CI environment using `kind` a single node cluster comes up and is ready to use in 30 seconds, down from 4 minutes in the simple minikube implementation (3+ minutes is a lot in a CI pipeline!).
 
-A further optimisation is to have the build phase `docker pull` any dependent images your Kubernetes resources will require, so when your CI process is deploying your Kubernetes resources it doesn't have to pull in any images over the network. To do this you will need to build your own version of `kind` and just overwrite the `/images.sh` file with the images your want to pull in.
+A further optimisation is to have the build phase `docker pull` any dependent images your Kubernetes resources will require, so when your CI process is deploying your Kubernetes resources it doesn't have to pull in any images over the network. To do this you will need to build your own version of `kind` and update the `/after-cluster.sh` file with the images you want to pull in.
 
 ## How do I use this?
 
@@ -78,9 +78,9 @@ Pre-built images are available on dockerhub (https://hub.docker.com/r/bsycorp/ki
 
 Run `./build.sh <image name>` to build the image. Add your custom images to `/images.sh` to have them be available at runtime. These environment variables are available to configure the build:
 
-- DOCKER_IMAGE: defaults to `stable-dind`
-- MINIKUBE_VERSION: defaults to `v0.28.0`
-- KUBERNETES_VERSION: defaults to `v1.10.5`
+- DOCKER_IMAGE: defaults to `19.03.5-dind`
+- MINIKUBE_VERSION: defaults to `v1.0.1`
+- KUBERNETES_VERSION: defaults to `v1.14.8`
 - STATIC_IP: defaults to `172.30.99.1`
 
 We use git submodules to pull in this project and then add images and CI configuration around it, but there are other ways to do it.

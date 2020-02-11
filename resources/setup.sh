@@ -41,7 +41,7 @@ function replaceHost(){
 }
 
 # start minikube, will fail, but s'ok is just for downloading things
-minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP || true
+minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP --extra-config=kubeadm.ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables,Service-Docker || true
 
 # fix minikube generated configs, this shouldn't be required if minikube behaved itself / had args for all the things
 replaceHost
@@ -64,6 +64,7 @@ fi
 } &
 
 # run kubeadm to create cluster - ignore preflights as there will be failures because of swap, systemd, lots of things..
+/usr/bin/kubeadm config migrate --old-config /var/lib/kubeadm.yaml --new-config /var/lib/kubeadm.yaml
 /usr/bin/kubeadm init --config /var/lib/kubeadm.yaml --ignore-preflight-errors=all
 
 # use kube-config that contains the certs, rather than referencing files
@@ -139,7 +140,6 @@ tar -c -C /var/lib/docker ./ | lz4 -3 > /docker-cache.tar.lz4
 
 # cleanup
 rm -f /setup.sh
-rm -f /images.sh
 
 # cleanup extra binaries
 rm -f /usr/local/bin/minikube

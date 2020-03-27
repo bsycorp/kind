@@ -6,6 +6,7 @@ STATIC_IP="$3"
 
 mkdir -p /var/kube-config
 echo $KUBERNETES_VERSION > /var/kube-config/kubernetes-version
+KUBERNETES_MAJOR_MINOR_VERSION="$(echo $KUBERNETES_VERSION | cut -d. -f 1-2)"
 echo $MINIKUBE_VERSION > /var/kube-config/minikube-version
 echo $STATIC_IP > /var/kube-config/static-ip
 
@@ -78,11 +79,13 @@ kubectl -n kube-system delete deploy kubernetes-dashboard || true
 kubectl label node minikube node-role.kubernetes.io/node= || true
 kubectl taint node minikube node-role.kubernetes.io/master:NoSchedule- || true
 
-# workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
-kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: [0-9]*|maxPerCore: 0|g' > kube-proxy-cm.yaml
-kubectl -n kube-system delete cm kube-proxy
-kubectl -n kube-system create -f kube-proxy-cm.yaml
-rm -f kube-proxy-cm.yaml
+if [ "$KUBERNETES_MAJOR_MINOR_VERSION" -lt "1.17" ]; then
+    # workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
+    kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: [0-9]*|maxPerCore: 0|g' > kube-proxy-cm.yaml
+    kubectl -n kube-system delete cm kube-proxy
+    kubectl -n kube-system create -f kube-proxy-cm.yaml
+    rm -f kube-proxy-cm.yaml
+fi
 
 # workaround for https://github.com/bsycorp/kind/issues/19
 kubectl -n kube-system get cm coredns -o yaml | sed 's|/etc/resolv.conf|8.8.8.8 9.9.9.9|g' > coredns-cm.yaml

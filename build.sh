@@ -50,7 +50,7 @@ docker cp before-cluster.sh $CONTAINER_ID:/before-cluster.sh
 docker cp after-cluster.sh $CONTAINER_ID:/after-cluster.sh
 
 echo "Starting setup"
-docker exec $CONTAINER_ID /setup.sh $KUBERNETES_VERSION $MINIKUBE_VERSION $STATIC_IP
+docker exec -e "KUBERNETES_VERSION=$KUBERNETES_VERSION" -e "MINIKUBE_VERSION=$MINIKUBE_VERSION" -e "MINIKUBE_EXTRA_ARGS" -e "STATIC_IP=$STATIC_IP" $CONTAINER_ID /setup.sh
 echo "Commiting new container"
 docker commit \
 	-c 'ENTRYPOINT ["/entrypoint.sh"]' \

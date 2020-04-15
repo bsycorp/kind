@@ -1,9 +1,5 @@
 #!/bin/sh
 set -e
-KUBERNETES_VERSION="$1"
-MINIKUBE_VERSION="$2"
-STATIC_IP="$3"
-
 mkdir -p /var/kube-config
 echo $KUBERNETES_VERSION > /var/kube-config/kubernetes-version
 KUBERNETES_MAJOR_MINOR_VERSION="$(echo $KUBERNETES_VERSION | cut -d. -f 1-2)"
@@ -14,7 +10,7 @@ echo $STATIC_IP > /var/kube-config/static-ip
 docker info
 
 # add deps
-apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat lz4
+apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat lz4 conntrack-tools
 
 # add a static / known ip to the existing default network interface so that we can configure kube component to use that IP, and can re-use that IP again at boot time.
 ORIG_IP=$(hostname -i)
@@ -42,7 +38,13 @@ function replaceHost(){
 }
 
 # start minikube, will fail, but s'ok is just for downloading things
-minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP --extra-config=kubeadm.ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables,Service-Docker || true
+minikube start --vm-driver=none --kubernetes-version $KUBERNETES_VERSION --bootstrapper kubeadm --apiserver-ips $STATIC_IP,127.0.0.1 --apiserver-name minikube --extra-config=apiserver.advertise-address=$STATIC_IP --extra-config=kubeadm.ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables,Service-Docker $MINIKUBE_EXTRA_ARGS || true
+if [ ! -f /usr/bin/kubeadm ]; then
+    ln -s /var/lib/minikube/binaries/$KUBERNETES_VERSION/kubeadm /usr/bin/kubeadm
+fi
+if [ ! -f /usr/bin/kubelet ]; then
+    ln -s /var/lib/minikube/binaries/$KUBERNETES_VERSION/kubelet /usr/bin/kubelet
+fi
 
 # fix minikube generated configs, this shouldn't be required if minikube behaved itself / had args for all the things
 replaceHost
@@ -65,6 +67,9 @@ fi
 } &
 
 # run kubeadm to create cluster - ignore preflights as there will be failures because of swap, systemd, lots of things..
+if [ ! -f /var/lib/kubeadm.yaml ]; then
+    cp /var/tmp/minikube/kubeadm.yaml /var/lib/kubeadm.yaml
+fi
 /usr/bin/kubeadm config migrate --old-config /var/lib/kubeadm.yaml --new-config /var/lib/kubeadm.yaml
 /usr/bin/kubeadm init --config /var/lib/kubeadm.yaml --ignore-preflight-errors=all
 

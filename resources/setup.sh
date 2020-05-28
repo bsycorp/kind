@@ -10,7 +10,7 @@ echo $STATIC_IP > /var/kube-config/static-ip
 docker info
 
 # add deps
-apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat lz4 conntrack-tools git
+apk add --update sudo curl ca-certificates bash less findutils supervisor tzdata socat lz4 conntrack-tools
 
 # add a static / known ip to the existing default network interface so that we can configure kube component to use that IP, and can re-use that IP again at boot time.
 ORIG_IP=$(hostname -i)
@@ -68,7 +68,13 @@ fi
 
 # run kubeadm to create cluster - ignore preflights as there will be failures because of swap, systemd, lots of things..
 if [ ! -f /var/lib/kubeadm.yaml ]; then
-    cp /var/tmp/minikube/kubeadm.yaml.new /var/lib/kubeadm.yaml
+    if [ -f /var/tmp/minikube/kubeadm.yaml ]
+    then
+      cp /var/tmp/minikube/kubeadm.yaml /var/lib/kubeadm.yaml
+    elif [ -f /var/tmp/minikube/kubeadm.yaml.new ]
+    then
+      cp /var/tmp/minikube/kubeadm.yaml.new /var/lib/kubeadm.yaml
+    fi
 fi
 /usr/bin/kubeadm config migrate --old-config /var/lib/kubeadm.yaml --new-config /var/lib/kubeadm.yaml
 /usr/bin/kubeadm init --config /var/lib/kubeadm.yaml --ignore-preflight-errors=all

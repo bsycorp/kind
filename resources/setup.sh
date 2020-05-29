@@ -105,10 +105,6 @@ kubectl -n kube-system delete cm coredns
 kubectl -n kube-system create -f coredns-cm.yaml
 rm -f coredns-cm.yaml
 
-# expose kube config so external consumers can call in
-cp /root/.minikube/proxy-client-ca.crt /var/kube-config/client.crt
-cp /root/.minikube/proxy-client-ca.key /var/kube-config/client.key
-cp /root/.minikube/ca.crt /var/kube-config/ca.crt
 # tweak cluster naming in config so it is identifiable as kind to test clients
 sed -i "s|kubernetes\|kubernetes-admin@kubernetes|kind|g" /root/.kube/config
 cp /root/.kube/config /var/kube-config/config

@@ -68,12 +68,19 @@ fi
 
 # run kubeadm to create cluster - ignore preflights as there will be failures because of swap, systemd, lots of things..
 if [ ! -f /var/lib/kubeadm.yaml ]; then
-    cp /var/tmp/minikube/kubeadm.yaml /var/lib/kubeadm.yaml
+    if [ -f /var/tmp/minikube/kubeadm.yaml ]
+    then
+      cp /var/tmp/minikube/kubeadm.yaml /var/lib/kubeadm.yaml
+    elif [ -f /var/tmp/minikube/kubeadm.yaml.new ]
+    then
+      cp /var/tmp/minikube/kubeadm.yaml.new /var/lib/kubeadm.yaml
+    fi
 fi
 /usr/bin/kubeadm config migrate --old-config /var/lib/kubeadm.yaml --new-config /var/lib/kubeadm.yaml
 /usr/bin/kubeadm init --config /var/lib/kubeadm.yaml --ignore-preflight-errors=all
 
 # use kube-config that contains the certs, rather than referencing files
+mkdir -p /root/.kube
 cp /etc/kubernetes/admin.conf /root/.kube/config
 
 # disable unneeded stuff
@@ -98,10 +105,6 @@ kubectl -n kube-system delete cm coredns
 kubectl -n kube-system create -f coredns-cm.yaml
 rm -f coredns-cm.yaml
 
-# expose kube config so external consumers can call in
-cp /root/.minikube/client.crt /var/kube-config/client.crt
-cp /root/.minikube/client.key /var/kube-config/client.key
-cp /root/.minikube/ca.crt /var/kube-config/ca.crt
 # tweak cluster naming in config so it is identifiable as kind to test clients
 sed -i "s|kubernetes\|kubernetes-admin@kubernetes|kind|g" /root/.kube/config
 cp /root/.kube/config /var/kube-config/config
@@ -125,7 +128,7 @@ while true; do
     POD_STATES=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].state}' | tr ' ' '\n' | cut -d'[' -f 2 | cut -d':' -f 1 | sort | uniq)
     POD_READINESS=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].ready}' | tr ' ' '\n' | sort | uniq)
     POD_COUNT=$(kubectl get po -n kube-system --no-headers | wc -l)
-    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -gt 7 ]; then
+    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -ge 7 ]; then
         echo "startup successful"
         break
     fi

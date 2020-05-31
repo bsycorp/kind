@@ -39,7 +39,7 @@ trap finish EXIT
 set -e
 
 echo "Starting dind"
-CONTAINER_ID=$(docker run --network $NETWORK --privileged -d --rm -e DOCKER_TLS_CERTDIR='' docker:$DOCKER_IMAGE dockerd)
+CONTAINER_ID=$(docker run --network $NETWORK --privileged -d --rm -e DOCKER_TLS_CERTDIR='' --hostname=minikube docker:$DOCKER_IMAGE dockerd)
 docker cp resources/entrypoint.sh $CONTAINER_ID:/entrypoint.sh
 docker cp resources/setup.sh $CONTAINER_ID:/setup.sh
 docker cp resources/start.sh $CONTAINER_ID:/start.sh

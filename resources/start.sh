@@ -2,6 +2,7 @@
 set -e
 KUBERNETES_VERSION=$(cat /var/kube-config/kubernetes-version)
 STATIC_IP=$(cat /var/kube-config/static-ip)
+echo "$STATIC_IP control-plane.minikube.internal" >> /etc/hosts
 
 echo "Clean up.." # cleanup stuff that might be left over from build-phase, sometimes throws Resource busy errors on build phase cleanup so needs to be done here.
 rm -rf /var/run/docker*

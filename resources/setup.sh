@@ -91,6 +91,21 @@ cp /etc/kubernetes/admin.conf /root/.kube/config
 # force storage provisioner, as its not default in later versions, need both or yaml isn't downloaded
 /usr/local/bin/minikube addons enable storage-provisioner || true
 /usr/local/bin/kubectl apply -f /etc/kubernetes/addons/storage-provisioner.yaml || true
+# setup default storage class if its missing
+if [ -z "$(/usr/local/bin/kubectl get storageclass -o jsonpath='{.items[*].metadata.name}')" ]; then
+    echo "Creating a default storage class as its missing, and required"
+    cat <<EOF | /usr/local/bin/kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: standard
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+EOF
+fi
 
 # disable unneeded stuff
 minikube addons disable dashboard || true

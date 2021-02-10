@@ -3,7 +3,7 @@ sleep 2
 
 # by default kind will set capacity to be the capacity of the host, and not honour any limits that have been imposed on it
 # this tries to reserve an amount inverse to the limit on kind to fix that
-if [ ! -z "ENFORCE_CAPACITY" ]; then
+if [ ! -z "$ENFORCE_CAPACITY" ]; then
 	MEMORY_TOTAL=$(cat /proc/meminfo | grep MemTotal | awk '{print $2}')
 	MEMORY_LIMIT=$(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) / 1024))
 	MEMORY_OUTSIDE_LIMIT=$(($MEMORY_TOTAL - $MEMORY_LIMIT))

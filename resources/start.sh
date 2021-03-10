@@ -1,5 +1,13 @@
 #!/bin/bash
 set -e
+error_trap() {
+    echo "Error on line $1"
+    echo "Startup timeout, didn't become healthy after 3 mins.. details:"
+    kubectl get po -n kube-system -o=custom-columns=NAME:.metadata.name --no-headers | xargs -I % sh -c 'kubectl -n kube-system describe po %; kubectl -n kube-system logs %' || true
+    kubectl get po  || true
+}
+trap 'error_trap $LINENO' ERR
+
 KUBERNETES_VERSION=$(cat /var/kube-config/kubernetes-version)
 STATIC_IP=$(cat /var/kube-config/static-ip)
 echo "$STATIC_IP control-plane.minikube.internal" >> /etc/hosts
@@ -35,27 +43,7 @@ echo "Starting Kubernetes.."
 supervisorctl -c /etc/supervisord.conf start kubelet
 
 sleep 5
-START_TIME=$(date +%s)
-while true; do
-    CURRENT_TIME=$(date +%s)
-    if [[ $((CURRENT_TIME-300)) -gt $START_TIME ]]; then
-        echo "Startup timeout, didn't become healthy after 2 mins.. details:"
-        kubectl get po -n kube-system -o=custom-columns=NAME:.metadata.name --no-headers | xargs -I % sh -c 'kubectl -n kube-system describe po %; kubectl -n kube-system logs %' || true
-        kubectl get po  || true
-        exit 1
-    fi
-
-    echo "Checking startup status.."
-    POD_PHASES=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.phase}' | tr ' ' '\n' | sort | uniq)
-    POD_STATES=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].state}' | tr ' ' '\n' | cut -d'[' -f 2 | cut -d':' -f 1 | sort | uniq)
-    POD_READINESS=$(kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].ready}' | tr ' ' '\n' | sort | uniq)
-    POD_COUNT=$(kubectl get po -n kube-system --no-headers | wc -l)
-    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -ge 7 ]; then
-        echo "startup successful"
-        break
-    fi
-    sleep 5
-done
+kubectl wait --for=condition=ready --timeout 3m pod --all --all-namespaces
 kubectl get po --all-namespaces
 
 # ready

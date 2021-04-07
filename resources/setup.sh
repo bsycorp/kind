@@ -139,27 +139,11 @@ chmod 644 /var/kube-config/*
 # fire after cluster hook, can be used for image pull / addon enabling whatevs
 source /after-cluster.sh
 
-# wait for pod start
-START_TIME=$(date +%s)
-while true; do
-    CURRENT_TIME=$(date +%s)
-    if [[ $((CURRENT_TIME-300)) -gt $START_TIME ]]; then
-        echo "Startup timeout, didn't become healthy after 2 mins.. details:"
-        /usr/local/bin/kubectl get po -n kube-system
-        exit 1
-    fi
-
-    echo "Checking startup status.."
-    POD_PHASES=$(/usr/local/bin/kubectl get po -n kube-system -o jsonpath='{.items[*].status.phase}' | tr ' ' '\n' | sort | uniq)
-    POD_STATES=$(/usr/local/bin/kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].state}' | tr ' ' '\n' | cut -d'[' -f 2 | cut -d':' -f 1 | sed 's|["{}]*||g' | sort | uniq)
-    POD_READINESS=$(/usr/local/bin/kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].ready}' | tr ' ' '\n' | sort | uniq)
-    POD_COUNT=$(/usr/local/bin/kubectl get po -n kube-system --no-headers | wc -l)
-    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -ge 7 ]; then
-        echo "startup successful"
-        break
-    fi
-    sleep 5
-done
+if ! kubectl wait --for=condition=ready --timeout 2m pod --all --all-namespaces; then
+    echo "Startup timeout, didn't become healthy after 2 mins.. details:"
+    /usr/local/bin/kubectl get po -n kube-system
+    exit 1
+fi
 
 # quick check
 /usr/local/bin/kubectl get no

@@ -88,6 +88,18 @@ cp /etc/kubernetes/admin.conf /root/.kube/config
 # fix scheduler auth
 /usr/local/bin/kubectl create rolebinding -n kube-system kube-scheduler --role=extension-apiserver-authentication-reader --serviceaccount=kube-system:kube-scheduler || true
 
+# workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
+/usr/local/bin/kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: .*|maxPerCore: 0|g' > kube-proxy-cm.yaml
+/usr/local/bin/kubectl -n kube-system delete cm kube-proxy
+/usr/local/bin/kubectl -n kube-system create -f kube-proxy-cm.yaml
+rm -f kube-proxy-cm.yaml
+
+# workaround for https://github.com/bsycorp/kind/issues/19
+/usr/local/bin/kubectl -n kube-system get cm coredns -o yaml | sed 's|/etc/resolv.conf|8.8.8.8 9.9.9.9|g' > coredns-cm.yaml
+/usr/local/bin/kubectl -n kube-system delete cm coredns
+/usr/local/bin/kubectl -n kube-system create -f coredns-cm.yaml
+rm -f coredns-cm.yaml
+
 # force storage provisioner, as its not default in later versions, need both or yaml isn't downloaded
 /usr/local/bin/minikube addons enable storage-provisioner || true
 /usr/local/bin/kubectl apply -f /etc/kubernetes/addons/storage-provisioner.yaml || true
@@ -114,18 +126,6 @@ minikube addons disable dashboard || true
 # mark single node as node, as well as master, remove master taint or things might not schedule.
 /usr/local/bin/kubectl label node minikube node-role.kubernetes.io/node= || true
 /usr/local/bin/kubectl taint node minikube node-role.kubernetes.io/master:NoSchedule- || true
-
-# workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
-/usr/local/bin/kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: .*|maxPerCore: 0|g' > kube-proxy-cm.yaml
-/usr/local/bin/kubectl -n kube-system delete cm kube-proxy
-/usr/local/bin/kubectl -n kube-system create -f kube-proxy-cm.yaml
-rm -f kube-proxy-cm.yaml
-
-# workaround for https://github.com/bsycorp/kind/issues/19
-/usr/local/bin/kubectl -n kube-system get cm coredns -o yaml | sed 's|/etc/resolv.conf|8.8.8.8 9.9.9.9|g' > coredns-cm.yaml
-/usr/local/bin/kubectl -n kube-system delete cm coredns
-/usr/local/bin/kubectl -n kube-system create -f coredns-cm.yaml
-rm -f coredns-cm.yaml
 
 # tweak cluster naming in config so it is identifiable as kind to test clients
 sed -i "s|kubernetes-admin@kubernetes|kind|g" /root/.kube/config

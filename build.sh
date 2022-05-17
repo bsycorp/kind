@@ -48,9 +48,16 @@ docker cp resources/supervisord.conf $CONTAINER_ID:/etc/supervisord.conf
 docker cp resources/sgerrand.rsa.pub $CONTAINER_ID:/etc/apk/keys/sgerrand.rsa.pub
 docker cp before-cluster.sh $CONTAINER_ID:/before-cluster.sh
 docker cp after-cluster.sh $CONTAINER_ID:/after-cluster.sh
+if [ -x before-setup.sh ]; then
+	./before-setup.sh $CONTAINER_ID
+fi
 
 echo "Starting setup"
 docker exec -e "KUBERNETES_VERSION=$KUBERNETES_VERSION" -e "MINIKUBE_VERSION=$MINIKUBE_VERSION" -e "MINIKUBE_EXTRA_ARGS" -e "STATIC_IP=$STATIC_IP" $CONTAINER_ID /setup.sh
+if [ -x after-setup.sh ]; then
+	./after-setup.sh $CONTAINER_ID
+fi
+
 echo "Commiting new container"
 docker commit \
 	-c 'ENTRYPOINT ["/entrypoint.sh"]' \

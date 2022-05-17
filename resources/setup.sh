@@ -88,6 +88,18 @@ cp /etc/kubernetes/admin.conf /root/.kube/config
 # fix scheduler auth
 /usr/local/bin/kubectl create rolebinding -n kube-system kube-scheduler --role=extension-apiserver-authentication-reader --serviceaccount=kube-system:kube-scheduler || true
 
+# workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
+/usr/local/bin/kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: .*|maxPerCore: 0|g' > kube-proxy-cm.yaml
+/usr/local/bin/kubectl -n kube-system delete cm kube-proxy
+/usr/local/bin/kubectl -n kube-system create -f kube-proxy-cm.yaml
+rm -f kube-proxy-cm.yaml
+
+# workaround for https://github.com/bsycorp/kind/issues/19
+/usr/local/bin/kubectl -n kube-system get cm coredns -o yaml | sed 's|/etc/resolv.conf|8.8.8.8 9.9.9.9|g' > coredns-cm.yaml
+/usr/local/bin/kubectl -n kube-system delete cm coredns
+/usr/local/bin/kubectl -n kube-system create -f coredns-cm.yaml
+rm -f coredns-cm.yaml
+
 # force storage provisioner, as its not default in later versions, need both or yaml isn't downloaded
 /usr/local/bin/minikube addons enable storage-provisioner || true
 /usr/local/bin/kubectl apply -f /etc/kubernetes/addons/storage-provisioner.yaml || true
@@ -115,18 +127,6 @@ minikube addons disable dashboard || true
 /usr/local/bin/kubectl label node minikube node-role.kubernetes.io/node= || true
 /usr/local/bin/kubectl taint node minikube node-role.kubernetes.io/master:NoSchedule- || true
 
-# workaround for https://github.com/kubernetes/kubernetes/issues/50787 and related 'conntrack' errors, kubeadm config should work but it doesn't for some reason.
-/usr/local/bin/kubectl -n kube-system get cm kube-proxy -o yaml | sed 's|maxPerCore: .*|maxPerCore: 0|g' > kube-proxy-cm.yaml
-/usr/local/bin/kubectl -n kube-system delete cm kube-proxy
-/usr/local/bin/kubectl -n kube-system create -f kube-proxy-cm.yaml
-rm -f kube-proxy-cm.yaml
-
-# workaround for https://github.com/bsycorp/kind/issues/19
-/usr/local/bin/kubectl -n kube-system get cm coredns -o yaml | sed 's|/etc/resolv.conf|8.8.8.8 9.9.9.9|g' > coredns-cm.yaml
-/usr/local/bin/kubectl -n kube-system delete cm coredns
-/usr/local/bin/kubectl -n kube-system create -f coredns-cm.yaml
-rm -f coredns-cm.yaml
-
 # tweak cluster naming in config so it is identifiable as kind to test clients
 sed -i "s|kubernetes-admin@kubernetes|kind|g" /root/.kube/config
 sed -i "s|kubernetes-admin@mk|kind|g" /root/.kube/config
@@ -139,27 +139,11 @@ chmod 644 /var/kube-config/*
 # fire after cluster hook, can be used for image pull / addon enabling whatevs
 source /after-cluster.sh
 
-# wait for pod start
-START_TIME=$(date +%s)
-while true; do
-    CURRENT_TIME=$(date +%s)
-    if [[ $((CURRENT_TIME-300)) -gt $START_TIME ]]; then
-        echo "Startup timeout, didn't become healthy after 2 mins.. details:"
-        /usr/local/bin/kubectl get po -n kube-system
-        exit 1
-    fi
-
-    echo "Checking startup status.."
-    POD_PHASES=$(/usr/local/bin/kubectl get po -n kube-system -o jsonpath='{.items[*].status.phase}' | tr ' ' '\n' | sort | uniq)
-    POD_STATES=$(/usr/local/bin/kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].state}' | tr ' ' '\n' | cut -d'[' -f 2 | cut -d':' -f 1 | sed 's|["{}]*||g' | sort | uniq)
-    POD_READINESS=$(/usr/local/bin/kubectl get po -n kube-system -o jsonpath='{.items[*].status.containerStatuses[*].ready}' | tr ' ' '\n' | sort | uniq)
-    POD_COUNT=$(/usr/local/bin/kubectl get po -n kube-system --no-headers | wc -l)
-    if [ "$POD_READINESS" == "true" ] && [ "$POD_STATES" == "running" ] && [ "$POD_PHASES" == "Running" ] && [ $POD_COUNT -ge 7 ]; then
-        echo "startup successful"
-        break
-    fi
-    sleep 5
-done
+if ! kubectl wait --for=condition=ready --timeout 2m pod --all --all-namespaces; then
+    echo "Startup timeout, didn't become healthy after 2 mins.. details:"
+    /usr/local/bin/kubectl get po -n kube-system
+    exit 1
+fi
 
 # quick check
 /usr/local/bin/kubectl get no

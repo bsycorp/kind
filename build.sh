@@ -34,7 +34,7 @@ function finish {
   docker rm -f $CONTAINER_ID
   docker volume prune -f | true
 }
-trap finish EXIT
+trap finish ERR
 
 set -e
 

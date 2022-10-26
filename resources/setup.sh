@@ -24,6 +24,8 @@ chmod +x /usr/local/bin/systemctl
 
 # add glibc as kube/minikube/things need it
 curl -Lo glibc.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk
+# avoid this error - https://github.com/sgerrand/alpine-pkg-glibc/issues/51
+apk del libc6-compat || true
 apk add glibc.apk
 rm -f glibc.apk
 
